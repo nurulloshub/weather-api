@@ -1,0 +1,54 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables (SECRETS!)
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*swo
+
+# Logs
+logs/
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+
+# Flask
+instance/
+.webassets-cache
+
+# Redis dump
+dump.rdb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Your API key (just in case)
+config.py.local
