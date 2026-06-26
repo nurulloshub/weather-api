@@ -66,10 +66,13 @@ def home():
     """Home page - API documentation"""
     return jsonify({
         "message": "Welcome to Weather API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "endpoints": {
             "/": "API information (GET)",
             "/weather/<city>": "Get weather for a city (GET)",
+            "/weather/<city>?unit=imperial": "Get weather in Fahrenheit (GET)",
+            "/weather/<city>/alerts": "Get weather alerts for a city (GET)",
+            "/forecast/<city>": "Get 5-day forecast for a city (GET)", 
             "/health": "Health check (GET)",
             "/cache/stats": "Cache statistics (GET)",
             "/cache/clear": "Clear cache (DELETE)"
@@ -77,7 +80,9 @@ def home():
         "features": {
             "caching": "✅ Enabled" if redis_client else "❌ Disabled",
             "rate_limiting": "✅ Enabled",
-            "cache_expiry": f"{Config.CACHE_EXPIRY / 3600} hours"
+            "cache_expiry": f"{Config.CACHE_EXPIRY / 3600} hours",
+            "forecast": "✅ Available (5 days)",
+            "alerts": "✅ Available"
         }
     }), 200
 
@@ -105,15 +110,35 @@ def health_check():
 @app.route('/weather/<city>', methods=['GET'])
 @limiter.limit(Config.RATE_LIMIT)
 def get_weather(city):
-    """Get weather for a specific city"""
+    """Get weather for a specific city (with unit selection)"""
+
+    # Get unit parameter from URL (default: metric)
+    unit = request.args.get('unit', 'metric').lower()
+
+    # Validate unit
+    if unit not in ['metric', 'imperial']:
+        return jsonify({
+            "error": "Invalid unit",
+            "message": "Unit must be 'metric' or 'imperial'"
+        }), 400
+    
+    # Map to Visual Crossing's unitGroup parameter
+    unit_group = 'us' if unit == 'imperial' else 'metric'
+
     logger.info(f"📥 Received request for city: {city}")
+
+    # Create cache key with unit included
+    cache_key = f"weather:{city.lower()}:{unit}"
     
     # Check cache first
-    cached_data = get_cached_weather(city)
-    if cached_data:
-        cached_data['from_cache'] = True
-        cached_data['cached_at'] = datetime.now().isoformat()
-        return jsonify(cached_data), 200
+    if redis_client:
+        cached_data = redis_client.get(cache_key)
+        if cached_data:
+            logger.info(f"Cache HIT for city: {city} ({unit})")
+            data = json.loads(cached_data)
+            data['from_cache'] = True
+            data['cached_at'] = datetime.now().isoformat()
+            return jsonify(data), 200
     
     # Fetch REAL weather data from Visual Crossing
     try:
@@ -123,11 +148,11 @@ def get_weather(city):
         # Parameters for the API request
         params = {
             'key': Config.WEATHER_API_KEY,
-            'unitGroup': 'metric', # Celsius,
+            'unitGroup': unit_group,
             'contentType': 'json'
         }
 
-        logger.info(f"Fetching weather from Visual Crossing for: {city}")
+        logger.info(f"Fetching weather from Visual Crossing for: {city} ({unit})")
 
         # Make the request to Visual Crossing
         response = requests.get(url, params=params, timeout=10)
@@ -139,6 +164,7 @@ def get_weather(city):
         # Extract the weather data we want
         weather_data = {
             "city": city,
+            "unit": "Celsius" if unit == "metric" else "Fehrenheit",
             "temperature": data.get('currentConditions', {}).get('temp'),
             "conditions": data.get('currentConditions', {}).get('conditions'),
             "humidity": data.get('currentConditions', {}).get('humidity'),
@@ -155,7 +181,14 @@ def get_weather(city):
             "data_source": "Visual Crossing API (Real Data)"
         }
 
-        logger.info(f"Successfully fetched weather for: {city}")
+        logger.info(f"Successfully fetched weather for: {city} ({unit})")
+        
+        # Store in cache
+        if redis_client:
+            redis_client.setex(cache_key, Config.CACHE_EXPIRY, json.dumps(weather_data))
+            logger.info(f"💾 Cached data for {city} ({unit}) with TTL of {Config.CACHE_EXPIRY}s")
+
+        return jsonify(weather_data), 200
 
     except requests.exceptions.HTTPError as e:
         # Handle HTTP errors (404, 401, etc.)
@@ -199,10 +232,6 @@ def get_weather(city):
             "message": "An unexpected error occured. Please try again later."
         }), 500
     
-    # Store in cache
-    set_cached_weather(city, weather_data)
-    
-    return jsonify(weather_data), 200
 
 @app.route('/cache/stats', methods=['GET'])
 def cache_stats():
@@ -256,6 +285,181 @@ def rate_limit_exceeded(error):
         "error": "Rate limit exceeded",
         "message": "Too many requests. Please try again later."
     }), 429
+
+@app.route('/forecast/<city>', methods=['GET'])
+@limiter.limit(Config.RATE_LIMIT)
+def get_forecast(city):
+    """Get 5-day weather forecast for a city"""
+    logger.info(f"📥 Received forecast request for city: {city}")
+    
+    # Check cache first
+    cache_key = f"forecast:{city.lower()}"
+    if redis_client:
+        cached_data = redis_client.get(cache_key)
+        if cached_data:
+            logger.info(f"✅ Forecast Cache HIT for city: {city}")
+            forecast_data = json.loads(cached_data)
+            forecast_data['from_cache'] = True
+            forecast_data['cached_at'] = datetime.now().isoformat()
+            return jsonify(forecast_data), 200  # ✅ RETURN HERE
+    
+    try:
+        # Fetch forecast from Visual Crossing
+        url = f"{Config.WEATHER_API_URL}/{city}/next5days"
+        
+        params = {
+            'key': Config.WEATHER_API_KEY,
+            'unitGroup': 'metric',
+            'contentType': 'json'
+        }
+        
+        logger.info(f"🌤️ Fetching forecast from Visual Crossing for: {city}")
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extract forecast data
+        forecast_list = []
+        for day in data.get('days', [])[:5]:
+            forecast_list.append({
+                "date": day.get('datetime'),
+                "temperature_high": day.get('tempmax'),
+                "temperature_low": day.get('tempmin'),
+                "conditions": day.get('conditions'),
+                "description": day.get('description'),
+                "humidity": day.get('humidity'),
+                "wind_speed": day.get('windspeed'),
+                "precipitation": day.get('precip'),
+                "precipitation_probability": day.get('precipprob')
+            })
+        
+        forecast_data = {
+            "city": city,
+            "forecast": forecast_list,
+            "timestamp": datetime.now().isoformat(),
+            "data_source": "Visual Crossing API (Real Data)"
+        }
+        
+        logger.info(f"✅ Successfully fetched forecast for: {city}")
+        
+        # Store in cache
+        if redis_client:
+            redis_client.setex(cache_key, Config.CACHE_EXPIRY, json.dumps(forecast_data))
+            logger.info(f"💾 Cached forecast for {city}")
+        
+        return jsonify(forecast_data), 200  # ✅ RETURN HERE
+    
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"❌ HTTP error: {e}")
+        if e.response.status_code == 404:
+            return jsonify({"error": f"City '{city}' not found"}), 404
+        elif e.response.status_code == 401:
+            return jsonify({"error": "Invalid API key"}), 401
+        else:
+            return jsonify({"error": "Weather service error"}), 503
+    
+    except requests.exceptions.Timeout:
+        logger.error(f"❌ Timeout error")
+        return jsonify({"error": "Service timeout"}), 504
+    
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/weather/<city>/alerts', methods=['GET'])
+@limiter.limit(Config.RATE_LIMIT)
+def get_weather_alerts(city):
+    """Get weather alerts for a city"""
+    logger.info(f"📥 Received alerts request for city: {city}")
+    
+    # Cache key for alerts
+    cache_key = f"alerts:{city.lower()}"
+    
+    # Check cache first
+    if redis_client:
+        cached_data = redis_client.get(cache_key)
+        if cached_data:
+            logger.info(f"✅ Alerts Cache HIT for city: {city}")
+            data = json.loads(cached_data)
+            data['from_cache'] = True
+            data['cached_at'] = datetime.now().isoformat()
+            return jsonify(data), 200
+    
+    try:
+        # Fetch weather data (alerts come from the same API)
+        url = f"{Config.WEATHER_API_URL}/{city}"
+        
+        params = {
+            'key': Config.WEATHER_API_KEY,
+            'unitGroup': 'metric',
+            'contentType': 'json'
+        }
+        
+        logger.info(f"🌤️ Fetching alerts for: {city}")
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extract alerts
+        alerts_data = data.get('alerts', [])
+        
+        # Format the response
+        if not alerts_data:
+            alerts_response = {
+                "city": city,
+                "alert_count": 0,
+                "alerts": [],
+                "message": "No active weather alerts for this area",
+                "timestamp": datetime.now().isoformat(),
+                "from_cache": False
+            }
+        else:
+            alert_list = []
+            for alert in alerts_data:
+                alert_list.append({
+                    "event": alert.get('event', 'Unknown'),
+                    "severity": alert.get('severity', 'Unknown'),
+                    "description": alert.get('description', 'No description'),
+                    "start_time": alert.get('start', 'Unknown'),
+                    "end_time": alert.get('end', 'Unknown'),
+                    "source": alert.get('source', 'Unknown')
+                })
+            
+            alerts_response = {
+                "city": city,
+                "alert_count": len(alert_list),
+                "alerts": alert_list,
+                "timestamp": datetime.now().isoformat(),
+                "from_cache": False
+            }
+        
+        # Store in cache
+        if redis_client:
+            redis_client.setex(cache_key, Config.CACHE_EXPIRY, json.dumps(alerts_response))
+            logger.info(f"💾 Cached alerts for {city}")
+        
+        return jsonify(alerts_response), 200
+        
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            return jsonify({"error": f"City '{city}' not found"}), 404
+        elif e.response.status_code == 401:
+            return jsonify({"error": "Invalid API key"}), 401
+        else:
+            logger.error(f"❌ Alerts API error: {e}")
+            return jsonify({"error": "Weather service error"}), 503
+    
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Service timeout"}), 504
+    
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+
 
 # ---------- Start the App ----------
 if __name__ == '__main__':
