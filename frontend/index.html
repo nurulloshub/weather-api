@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar / Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-cloud-sun"></i>
+                    <span>Weather<span class="highlight">API</span></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Connected</span>
+                </div>
+                <div class="unit-toggle">
+                    <button class="unit-btn active" data-unit="metric">°C</button>
+                    <button class="unit-btn" data-unit="imperial">°F</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="cityInput" placeholder="Search for a city..." value="London">
+                        <button id="searchBtn">Search</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loading" class="loading-state hidden">
+                <div class="loading-spinner"></div>
+                <p>Fetching weather data...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error" class="error-state hidden">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Oops! Something went wrong</h3>
+                <p id="errorMessage">City not found. Please try again.</p>
+                <button onclick="location.reload()">Try Again</button>
+            </div>
+
+            <!-- Weather Display -->
+            <div id="weatherDisplay" class="weather-display hidden">
+                <!-- Current Weather -->
+                <div class="current-weather">
+                    <div class="weather-main">
+                        <div class="weather-info">
+                            <h2 id="cityName">London</h2>
+                            <p class="condition" id="weatherCondition">Partly Cloudy</p>
+                            <div class="temp-display">
+                                <span id="tempDisplay">22</span>
+                                <span class="degree" id="degreeSymbol">°C</span>
+                            </div>
+                            <p class="feels-like">Feels like <span id="feelsLike">23</span>°C</p>
+                        </div>
+                        <div class="weather-icon" id="weatherIcon">
+                            <i class="fas fa-cloud-sun"></i>
+                        </div>
+                    </div>
+
+                    <!-- Weather Details Grid -->
+                    <div class="weather-details">
+                        <div class="detail-card">
+                            <i class="fas fa-tint"></i>
+                            <div class="detail-info">
+                                <span class="detail-label">Humidity</span>
+                                <span class="detail-value" id="humidity">65%</span>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fas fa-wind"></i>
+                            <div class="detail-info">
+                                <span class="detail-label">Wind Speed</span>
+                                <span class="detail-value" id="windSpeed">12 km/h</span>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fas fa-compress-alt"></i>
+                            <div class="detail-info">
+                                <span class="detail-label">Pressure</span>
+                                <span class="detail-value" id="pressure">1013 hPa</span>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fas fa-eye"></i>
+                            <div class="detail-info">
+                                <span class="detail-label">Visibility</span>
+                                <span class="detail-value" id="visibility">10 km</span>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fas fa-sun"></i>
+                            <div class="detail-info">
+                                <span class="detail-label">UV Index</span>
+                                <span class="detail-value" id="uvIndex">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sun Times -->
+                    <div class="sun-times">
+                        <div class="sun-card">
+                            <i class="fas fa-sunrise"></i>
+                            <div>
+                                <span class="sun-label">Sunrise</span>
+                                <span class="sun-value" id="sunrise">06:30</span>
+                            </div>
+                        </div>
+                        <div class="sun-card">
+                            <i class="fas fa-sunset"></i>
+                            <div>
+                                <span class="sun-label">Sunset</span>
+                                <span class="sun-value" id="sunset">19:45</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5-Day Forecast -->
+                <div class="forecast-section">
+                    <div class="section-header">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>5-Day Forecast</h3>
+                    </div>
+                    <div class="forecast-container" id="forecastContainer">
+                        <div class="forecast-loading">Loading forecast...</div>
+                    </div>
+                </div>
+
+                <!-- Weather Alerts -->
+                <div class="alerts-section">
+                    <div class="section-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Weather Alerts</h3>
+                    </div>
+                    <div id="alertsContainer">
+                        <div class="no-alerts">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No active weather alerts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Source -->
+                <div class="data-source">
+                    <span>🌤️ Powered by Visual Crossing Weather API</span>
+                    <span>•</span>
+                    <span>⚡ Cached with Redis</span>
+                    <span>•</span>
+                    <span>🔄 Updated: <span id="updateTime">Just now</span></span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

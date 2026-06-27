@@ -1,7 +1,7 @@
 """ Weather API"""
 
 import requests
-
+from flask_cors import CORS
 from flask import Flask, jsonify, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -13,6 +13,8 @@ from datetime import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)
+
 app.config.from_object(Config)
 
 # Set up logging
