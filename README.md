@@ -1,123 +1,120 @@
-# Weather API 🌤️
+<div align="center">
+  <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Flask-3.0.0-blue?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
+  <img src="https://img.shields.io/badge/Redis-5.0.1-red?style=for-the-badge&logo=redis&logoColor=white" alt="Redis">
+  <img src="https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge&logo=javascript&logoColor=white" alt="JavaScript">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
+</div>
 
-A RESTful weather API built with Flask, Redis, and Visual Crossing Weather API.
+<br>
 
-## Features
+<h1 align="center">🌤️ Weather API & Dashboard</h1>
 
-- 🌡️ Real-time weather data
-- 🔄 Redis caching with 12-hour TTL
-- 🚦 Rate limiting (100 requests/hour)
-- 📊 5-day forecast
-- 🔄 Unit conversion (Celsius/Fahrenheit)
-- ⚠️ Weather alerts
-- 💬 Human-friendly descriptions
-- 🏥 Health check endpoint
+<p align="center">
+  <strong>A production-ready full-stack weather application with real-time data, caching, and a beautiful dashboard.</strong>
+</p>
 
-## Tech Stack
+<p align="center">
+  <a href="#-features">Features</a> •
+  <a href="#-tech-stack">Tech Stack</a> •
+  <a href="#-live-demo">Live Demo</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-api-documentation">API Docs</a> •
+  <a href="#-screenshots">Screenshots</a> •
+  <a href="#-contributing">Contributing</a>
+</p>
 
-- Python 3.8+
-- Flask (Web framework)
-- Redis (Caching)
-- Visual Crossing Weather API
-- Flask-Limiter (Rate limiting)
+<br>
 
-## Installation
+## 📸 Screenshots
 
-### 1. Clone the repository
-\`\`\`bash
-git clone https://github.com/yourusername/weather-api.git
+<div align="center">
+  <img src="https://github.com/nurulloshub/weather-api/raw/main/screenshots/dashboard.png" alt="Weather Dashboard" width="600">
+  <br>
+  <em>Beautiful weather dashboard with real-time data</em>
+</div>
+
+<br>
+
+## ✨ Features
+
+### Backend (API)
+- ✅ **RESTful API** with Flask
+- ✅ **Redis Caching** - 12-hour TTL for fast responses
+- ✅ **Rate Limiting** - 100 requests/hour per IP
+- ✅ **Real-time Weather** - Powered by Visual Crossing API
+- ✅ **5-Day Forecast** - Detailed daily predictions
+- ✅ **Weather Alerts** - Severe weather warnings
+- ✅ **Unit Conversion** - Celsius/Fahrenheit toggle
+- ✅ **Error Handling** - Graceful failures with meaningful messages
+- ✅ **Health Checks** - Monitoring endpoint
+- ✅ **Cache Management** - Stats and clear endpoints
+
+### Frontend (Dashboard)
+- ✅ **Modern UI** - Clean, responsive, glass-morphism design
+- ✅ **Search Cities** - 100,000+ cities worldwide
+- ✅ **Current Weather** - Temperature, conditions, feels like
+- ✅ **Detailed Metrics** - Humidity, wind, pressure, visibility, UV index
+- ✅ **5-Day Forecast** - Visual forecast cards
+- ✅ **Weather Alerts** - Active warnings display
+- ✅ **Unit Toggle** - Celsius/Fahrenheit switch
+- ✅ **Loading States** - Smooth user experience
+- ✅ **Error Handling** - User-friendly error messages
+- ✅ **Responsive Design** - Works on all devices
+
+<br>
+
+## 🛠️ Tech Stack
+
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| **Python 3.8+** | Programming language |
+| **Flask 3.0** | Web framework |
+| **Redis 5.0** | Caching layer |
+| **Flask-Limiter** | Rate limiting |
+| **Requests** | HTTP client for API calls |
+| **Gunicorn** | Production WSGI server |
+
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| **HTML5** | Structure |
+| **CSS3** | Styling with glass-morphism |
+| **JavaScript ES6+** | Interactivity and API calls |
+| **Font Awesome** | Weather icons |
+| **Google Fonts** | Typography (Inter) |
+
+### Deployment
+| Service | Purpose |
+|---------|---------|
+| **Render** | Backend hosting |
+| **Netlify** | Frontend hosting |
+| **GitHub** | Version control |
+
+<br>
+
+## 🚀 Live Demo
+
+### 🌐 Frontend Dashboard
+[https://weather-dashboard.netlify.app](https://weather-dashboard.netlify.app)
+
+### 🔌 Backend API
+[https://weather-api.onrender.com](https://weather-api.onrender.com)
+
+### 📚 API Documentation
+Postman Collection: [Weather API Collection](https://documenter.getpostman.com/view/...)
+
+<br>
+
+## 📋 Quick Start
+
+### Prerequisites
+- Python 3.8 or higher
+- Redis server (optional, fallback cache available)
+- Git
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/nurulloshub/weather-api.git
 cd weather-api
-\`\`\`
-
-### 2. Create virtual environment
-\`\`\`bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-\`\`\`
-
-### 3. Install dependencies
-\`\`\`bash
-pip install -r requirements.txt
-\`\`\`
-
-### 4. Configure environment variables
-\`\`\`bash
-cp .env.example .env
-# Edit .env with your API key
-\`\`\`
-
-### 5. Run the application
-\`\`\`bash
-python app.py
-\`\`\`
-
-## API Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `/` | API information |
-| `/health` | Health check |
-| `/weather/<city>` | Current weather |
-| `/weather/<city>?unit=imperial` | Current weather (Fahrenheit) |
-| `/forecast/<city>` | 5-day forecast |
-| `/weather/<city>/alerts` | Weather alerts |
-| `/weather/<city>/nice` | Human-friendly summary |
-| `/cache/stats` | Cache statistics |
-| `/cache/clear` | Clear cache |
-
-## Example Usage
-
-\`\`\`bash
-# Get weather for London
-curl http://localhost:5000/weather/London
-
-# Get 5-day forecast
-curl http://localhost:5000/forecast/London
-
-# Get weather in Fahrenheit
-curl http://localhost:5000/weather/NewYork?unit=imperial
-
-# Get human-friendly summary
-curl http://localhost:5000/weather/Tokyo/nice
-\`\`\`
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `WEATHER_API_KEY` | Your Visual Crossing API key |
-| `REDIS_URL` | Redis connection string |
-| `CACHE_EXPIRY_SECONDS` | Cache TTL in seconds (default: 43200) |
-| `RATE_LIMIT` | Rate limit per IP (default: 100/hour) |
-
-## Error Handling
-
-The API returns appropriate HTTP status codes:
-- `200` - Success
-- `400` - Bad request
-- `401` - Invalid API key
-- `404` - City not found
-- `429` - Rate limit exceeded
-- `503` - Weather service unavailable
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-MIT
-
-## Author
-
-Your Name
-
-## Acknowledgments
-
-- [Visual Crossing Weather API](https://www.visualcrossing.com/weather-api)
-- [Flask](https://flask.palletsprojects.com/)
-- [Redis](https://redis.io/)
