@@ -5,9 +5,9 @@
  */
 
 // Configuration
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://weather-api-64y2.onrender.com';
 let currentUnit = 'metric';
-let currentCity = 'London';
+let currentCity = 'Uzbekistan';
 
 // DOM Elements
 const cityInput = document.getElementById('cityInput');
