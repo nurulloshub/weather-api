@@ -29,7 +29,7 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/nurulloshub/weather-api/raw/main/screenshots/dashboard.png" alt="Weather Dashboard" width="600">
+  <img src="image.png" alt="Weather Dashboard" width="600">
   <br>
   <em>Beautiful weather dashboard with real-time data</em>
 </div>
@@ -97,10 +97,10 @@
 ## 🚀 Live Demo
 
 ### 🌐 Frontend Dashboard
-[https://weather-dashboard.netlify.app](https://weather-dashboard.netlify.app)
+[https://resilient-dolphin-8e0f4f.netlify.app](https://resilient-dolphin-8e0f4f.netlify.app)
 
 ### 🔌 Backend API
-[https://weather-api.onrender.com](https://weather-api.onrender.com)
+[https://weather-api-64y2.onrender.com](https://weather-api-64y2.onrender.com)
 
 ### 📚 API Documentation
 Postman Collection: [Weather API Collection](https://documenter.getpostman.com/view/...)
